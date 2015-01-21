@@ -54,12 +54,13 @@
          *  c - ASCII character represented by the given value
          *  d - signed decimal number
          *  f - floating point value
+         *  e - scientific notation
          *  o - octal number
          *  s - string
          *  x - hexadecimal number (lowercase characters)
          *  X - hexadecimal number (uppercase characters)
          */
-        var r = new RegExp( /%(\+)?([0 ]|'(.))?(-)?([0-9]+)?(\.([0-9]+))?([%bcdfosxX])/g );
+        var r = new RegExp( /%(\+)?([0 ]|'(.))?(-)?([0-9]+)?(\.([0-9]+))?([%bcdefosxX])/g );
 
         /**
          * Each format string is splitted into the following parts:
@@ -96,9 +97,9 @@
                 padding: ( part[2] == undefined )
                     ? ( ' ' ) /* default */
                     : ( ( part[2].substring( 0, 1 ) == "'" )
-                    ? ( part[3] ) /* use special char */
-                    : ( part[2] ) /* use normal <space> or zero */
-                ),
+			? ( part[3] ) /* use special char */
+			: ( part[2] ) /* use normal <space> or zero */
+                      ),
                 /* should the output be aligned left?*/
                 alignLeft: ( part[4] == '-' ),
                 /* width specifier (number or false) */
@@ -128,37 +129,60 @@
             // point
             var preSubstitution = "";
             switch ( parts[i].type ) {
-                case '%':
-                    preSubstitution = "%";
-                    break;
-                case 'b':
-                    preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 2 );
-                    break;
-                case 'c':
-                    preSubstitution = String.fromCharCode( Math.abs( parseInt( parts[i].data ) ) );
-                    break;
-                case 'd':
-                    preSubstitution = String( Math.abs( parseInt( parts[i].data ) ) );
-                    break;
-                case 'f':
-                    preSubstitution = ( parts[i].precision === false )
-                        ? ( String( ( Math.abs( parseFloat( parts[i].data ) ) ) ) )
-                        : ( Math.abs( parseFloat( parts[i].data ) ).toFixed( parts[i].precision ) );
-                    break;
-                case 'o':
-                    preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 8 );
-                    break;
-                case 's':
-                    preSubstitution = parts[i].data.substring( 0, parts[i].precision ? parts[i].precision : parts[i].data.length ); /* Cut if precision is defined */
-                    break;
-                case 'x':
-                    preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 16 ).toLowerCase();
-                    break;
-                case 'X':
-                    preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 16 ).toUpperCase();
-                    break;
-                default:
-                    throw 'sprintf: Unknown type "' + parts[i].type + '" detected. This should never happen. Maybe the regex is wrong.';
+            case '%':
+                preSubstitution = "%";
+                break;
+            case 'b':
+                preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 2 );
+                break;
+            case 'c':
+                preSubstitution = String.fromCharCode( Math.abs( parseInt( parts[i].data ) ) );
+                break;
+            case 'd':
+                preSubstitution = String( Math.abs( parseInt( parts[i].data ) ) );
+		if(parts[i].sign == true||parts[i].negative==true){
+		    parts[i].width=parts[i].width-1;
+		}
+
+                break;
+            case 'f':
+                preSubstitution = ( parts[i].precision === false )
+                    ? ( String( ( Math.abs( parseFloat( parts[i].data ) ) ) ) )
+                    : ( Math.abs( parseFloat( parts[i].data ) ).toFixed( parts[i].precision ) );
+                break;
+	    case 'e':
+                preSubstitution = ( parts[i].precision === false )
+                    ? ( String( ( Math.abs( parseFloat( parts[i].data ) ) ) ) )
+                    : ( Math.abs( parseFloat( parts[i].data ) ).toFixed( parts[i].precision ) );
+		preSubstitution =  Math.abs(parseFloat(parts[i].data)).toExponential(parts[i].precision) ;
+		if(1)
+		{
+		    mantissa=preSubstitution.substr(0,preSubstitution.indexOf('e')-1);             
+		    exponent = preSubstitution.substr(preSubstitution.indexOf('e')+1)
+                    preSubstitution=mantissa+sprintf('e%+04d',exponent)
+		    
+		    if(parts[i].sign == true ||parts[i].negative==true){
+			parts[i].width=parts[i].width-1;
+		    }
+
+
+		}
+
+		break;
+            case 'o':
+                preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 8 );
+                break;
+            case 's':
+                preSubstitution = parts[i].data.substring( 0, parts[i].precision ? parts[i].precision : parts[i].data.length ); /* Cut if precision is defined */
+                break;
+            case 'x':
+                preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 16 ).toLowerCase();
+                break;
+            case 'X':
+                preSubstitution = Math.abs( parseInt( parts[i].data ) ).toString( 16 ).toUpperCase();
+                break;
+            default:
+                throw 'sprintf: Unknown type "' + parts[i].type + '" detected. This should never happen. Maybe the regex is wrong.';
             }
 
             // The % character is a special type and does not need further processing
@@ -169,37 +193,71 @@
 
             // Modify the preSubstitution by taking sign, padding and width
             // into account
-
-            // Pad the string based on the given width
+	    // Pad the string based on the given width
+	    pad='';
             if ( parts[i].width != false ) {
-                // Padding needed?
+                // Paddingneeded?
+
                 if ( parts[i].width > preSubstitution.length )
                 {
                     var origLength = preSubstitution.length;
                     for( var j = 0; j < parts[i].width - origLength; ++j )
                     {
-                        preSubstitution = ( parts[i].alignLeft == true )
-                            ? ( preSubstitution + parts[i].padding )
-                            : ( parts[i].padding + preSubstitution );
+			pad=pad+parts[i].padding
+			
                     }
                 }
-            }
+	    }
+
+
+
+	    
+            
+            if ( parts[i].type == 'b'
+                 || parts[i].type == 'd'
+                 || parts[i].type == 'o'
+                 || parts[i].type == 'f'
+                 || parts[i].type == 'e'
+                 || parts[i].type == 'x'
+                 || parts[i].type == 'X' ) {
+		if(parts[i].padding[0]==' ')
+		{ 
+
+		    if ( parts[i].negative == true ) {
+			preSubstitution = pad + "-" + preSubstitution;
+		    }
+		    else if ( parts[i].sign == true ) {
+			preSubstitution = pad + "+" + preSubstitution;
+		    }
+		    else {
+
+			preSubstitution = ( parts[i].alignLeft == true )
+			    ? ( preSubstitution + pad )
+			    : ( pad + preSubstitution );
+		    }
+
+		}
+		else
+		{ 
+		    if(parts[i].padding=='0')
+			if ( parts[i].negative == true ) {
+			    preSubstitution = "-" + pad + preSubstitution;
+			}
+		    else if ( parts[i].sign == true ) {
+			preSubstitution = "+" +pad + preSubstitution;
+		    }
+
+		}}
+	    else
+	    {
+		preSubstitution = ( parts[i].alignLeft == true )
+                    ? ( preSubstitution + pad )
+                    : ( pad + preSubstitution );
+	    }
+
 
             // Add a sign symbol if neccessary or enforced, but only if we are
             // not handling a string
-            if ( parts[i].type == 'b'
-                || parts[i].type == 'd'
-                || parts[i].type == 'o'
-                || parts[i].type == 'f'
-                || parts[i].type == 'x'
-                || parts[i].type == 'X' ) {
-                if ( parts[i].negative == true ) {
-                    preSubstitution = "-" + preSubstitution;
-                }
-                else if ( parts[i].sign == true ) {
-                    preSubstitution = "+" + preSubstitution;
-                }
-            }
 
             // Add the substitution to the new string
             newString += preSubstitution;

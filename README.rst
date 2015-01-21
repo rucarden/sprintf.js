@@ -26,6 +26,8 @@ The following datatypes are supported:
     An ASCII character represented by the given value
 %d:
     A signed decimal number
+%e 
+    A floating point number in scientific notation(mantissa/exponent),lowercase
 %f:
     A floating point value
 %o:
