@@ -161,7 +161,7 @@
 		    exponent = preSubstitution.substr(preSubstitution.indexOf('e')+1)
                     preSubstitution=mantissa+sprintf('e%+04d',exponent)
 		    
-		    if(parts[i].sign == true ||parts[i].negative==true){
+		    if(parts[i].sign == true){// && parts[i].negative==true){
 			parts[i].width=parts[i].width-1;
 		    }
 
@@ -195,12 +195,23 @@
             // into account
 	    // Pad the string based on the given width
 	    pad='';
+//	    document.write('width== ' + parts[i].width + '<br>')
             if ( parts[i].width != false ) {
                 // Paddingneeded?
-
                 if ( parts[i].width > preSubstitution.length )
                 {
+//		    document.write(parts[i].width + "\n")
+		    
                     var origLength = preSubstitution.length;
+//		    document.write(origLength + "\n" )
+//		    document.write('<br>negative ' + parts[i].negative)
+//		    document.write('<br>sign ' + parts[i].sign+'<br>')
+//		   		    if ( parts[i].negative == true && parts[i].type == 'f') // For some reason f isn't handled correctlyn
+		    if ((parts[i].sign==true )||( parts[i].negative==true))
+		    {
+			origLength=origLength+1;
+//			document.write(origLength + "\n" )
+		    }
                     for( var j = 0; j < parts[i].width - origLength; ++j )
                     {
 			pad=pad+parts[i].padding
@@ -222,7 +233,7 @@
                  || parts[i].type == 'X' ) {
 		if(parts[i].padding[0]==' ')
 		{ 
-
+/*
 		    if ( parts[i].negative == true ) {
 			preSubstitution = pad + "-" + preSubstitution;
 		    }
@@ -230,11 +241,26 @@
 			preSubstitution = pad + "+" + preSubstitution;
 		    }
 		    else {
-
+			document.write('alignleft=='+parts[i].alignLeft+'<br>')
 			preSubstitution = ( parts[i].alignLeft == true )
 			    ? ( preSubstitution + pad )
 			    : ( pad + preSubstitution );
 		    }
+*/
+		    if ( parts[i].negative == true ) {
+			preSubstitution = "-" + preSubstitution;
+		    }
+		    else if ( parts[i].sign == true ) {
+			preSubstitution = "+" + preSubstitution;
+		    }
+		    else{
+			preSubstitution = preSubstitution ;//+ ' ';
+		    }
+			
+		    if (parts[i].alignLeft ==true)
+			preSubstitution=preSubstitution + pad ;
+		    else
+			preSubstitution=pad + preSubstitution  ;
 
 		}
 		else
@@ -243,7 +269,7 @@
 			if ( parts[i].negative == true ) {
 			    preSubstitution = "-" + pad + preSubstitution;
 			}
-		    else if ( parts[i].sign == true ) {
+		    else if ( parts[i].sign== true ) {
 			preSubstitution = "+" +pad + preSubstitution;
 		    }
 
