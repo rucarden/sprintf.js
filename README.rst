@@ -1,5 +1,5 @@
 ===================================
-A sprintf Javascript implementation
+A sprintf   Javascript implementation
 ===================================
 
 Scope
@@ -19,7 +19,7 @@ function known from the standard c library.
 The following datatypes are supported:
 
 %%:
-    A literal percent sign
+    A literal percent signgit@github.com:rucarden/sprintf.js.git
 %b:
     A binary number
 %c:
